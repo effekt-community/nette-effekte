@@ -15,7 +15,7 @@ def confluence(n: Int) { test: => Unit / Assertion }: Unit / Assertion = {
   0.each(n) { i =>
     try test()
     with Assertion {
-      def assert(condition, msg) = resume(do assert(condition, s"${msg} (run number ${i.show})"))
+      def assert(condition, msg, loc) = resume(do assert(condition, s"${msg} (run number ${i.show})", loc))
     }
   }
   test()
