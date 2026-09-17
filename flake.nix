@@ -46,7 +46,6 @@
             src = ./.;
             main = mainFile;
             tests = testFiles;
-            effektFlags = [ "--no-optimize" ];
 
             effekt = effektBuild;
             inherit (effektConfig) backends;
