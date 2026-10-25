@@ -19,7 +19,7 @@ jobs:
       - name: "Checking out repository..."
         uses: actions/checkout@v5
 
-      - name: "Installing and configuring the nix package manager..."
+      - name: "Installing Nix..."
         uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
@@ -27,7 +27,7 @@ jobs:
 
       - name: "Setting up packages..."
         run: |
-          nix profile install nixpkgs#nix-fast-build # parallel nix builder
+          nix profile install --inputs-from . nixpkgs#nix-fast-build # parallel nix builder
 
       - name: "Running `nix build ...`..."
         run: nix-fast-build --skip-cached --no-nom --flake ".#packages"
