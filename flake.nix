@@ -27,44 +27,53 @@
 
       ## Effekt configuration
       effektConfig = {
-          ## Uncomment and set a specific version if needed:
-          # version = "0.10.0";
+        ## Uncomment and set a specific version if needed:
+        # version = "0.82.0";
 
-          ## Select the backends that your project works on:
-          backends = bs: with bs; [ js ];
-        };
-    in {
-      packages = forAllSystems (system:
+        ## Select the backends that your project works on (CI builds and tests each one):
+        backends = bs: [ bs.js bs.js-web ];
+      };
+
+      perSystem = system:
         let
           effekt-lib = effekt-nix.lib.mkLib nixpkgsFor.${system};
 
           # Chooses the correct Effekt package.
           effektBuild = effekt-lib.getEffekt effektConfig;
-        in {
-          default = effekt-lib.buildEffektPackage {
+
+          package = effekt-lib.buildEffektPackage {
             inherit pname version;
             src = ./.;
             main = mainFile;
             tests = testFiles;
+            meta.platforms = systems;
+
+            ## Files the website loads, at their place in the project
+            extraFiles = [ "app/style.css" ];
 
             effekt = effektBuild;
             inherit (effektConfig) backends;
           };
-        }
-      );
 
-      devShells = forAllSystems (system:
-        let
-          effekt-lib = effekt-nix.lib.mkLib nixpkgsFor.${system};
-
-          # Chooses the correct Effekt package.
-          effektBuild = effekt-lib.getEffekt effektConfig;
+          variants = effekt-lib.variantsOf package;
         in {
-          default = effekt-lib.mkDevShell {
+          ## The package, plus one for each backend (such as 'llvm')
+          packages = variants // {
+            default = package;
+
+            ## Preview the website with 'nix run .#serve' (published by '.github/workflows/pages.yml')
+            serve = effekt-lib.serveSite { site = variants.js-web; };
+          };
+
+          devShell = effekt-lib.mkDevShell {
             effekt = effektBuild;
             inherit (effektConfig) backends;
           };
-        }
-      );
+        };
+
+      allSystems = forAllSystems perSystem;
+    in {
+      packages = builtins.mapAttrs (system: outputs: outputs.packages) allSystems;
+      devShells = builtins.mapAttrs (system: outputs: { default = outputs.devShell; }) allSystems;
     };
 }
