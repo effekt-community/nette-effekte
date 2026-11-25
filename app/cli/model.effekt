@@ -28,7 +28,7 @@ def load(state: NetState) { prog: => Unit / emit[Constructor] }: NetState = {
 
 def step(state: NetState) { stepper: (Program, RedexBag) => Unit / { emit[Constructor], emit[Redex] } }: NetState / { Redraw, fail } = {
   do redrawFull()
-  val (loaded, redexes) = returning::collect {
+  val (loaded, redexes) = term::returning::collect {
     state.load { state.program.stepper(state.redexes) } }
   NetState(loaded.net, loaded.program, redexes, Terminal(loaded.program.term::pretty, redexes.stringify))
 }
